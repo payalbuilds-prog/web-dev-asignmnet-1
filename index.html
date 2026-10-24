@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Event Dashboard</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body{
+    background: linear-gradient(135deg,yellowgreen,#822ada);
+    padding:25px;
+}
+
+h1{
+    text-align:center;
+    color:white;
+    margin-bottom:25px;
+    font-size:32px;
+}
+
+.container{
+    display:flex;
+    justify-content:center;
+    gap:25px;
+    flex-wrap:wrap;
+}
+
+/* Top Cards Bigger */
+.card{
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    width:380px;   /* Slightly bigger */
+    box-shadow:0 15px 30px rgba(41, 40, 40, 0.2);
+}
+
+h2{
+    margin-bottom:15px;
+    color:black;
+    font-size:20px;
+}
+
+form{
+    display:flex;
+    flex-direction:column;
+}
+
+label{
+    font-weight:600;
+    margin-top:10px;
+    font-size:14px;
+}
+
+input,select,textarea{
+    margin-top:5px;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    outline:none;
+    font-size:14px;
+}
+
+textarea{
+    resize:none;
+    height:70px;
+}
+
+button{
+    margin-top:12px;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:14px;
+}
+
+form button{
+    background:violet;
+    color:white;
+}
+
+#clearAll{
+    background:red;
+    color:white;
+    margin-right:6px;
+}
+
+#addSample{
+    background:green;
+    color:white;
+}
+
+.eventCard{
+    background:white;
+    padding:12px;
+    border-radius:8px;
+    margin-top:12px;
+    position:relative;
+    font-size:14px;
+}
+
+.eventCard h3{
+    font-size:16px;
+    margin-bottom:5px;
+}
+
+.badge{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:15px;
+    font-size:12px;
+    color:white;
+    margin-top:5px;
+}
+
+.deleteBtn{
+    position:absolute;
+    top:6px;
+    right:6px;
+    background:#990c13;
+    color:white;
+    border:none;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:12px;
+}
+
+/* Wider DOM Demo */
+
+#domDemo{
+    margin:30px auto;
+    text-align:center;
+    padding:25px;
+    width:800px;   /* Wider than other cards */
+    max-width:95%;
+}
+
+#keyOutput{
+    margin-top:15px;
+    font-size:22px;
+    font-weight:bold;
+    color:#667eea;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Smart Event Dashboard</h1>
+
+<div class="container">
+
+<div class="card">
+<h2>Add New Event</h2>
+
+<form id="eventForm">
+<label>Event Title</label>
+<input type="text" id="eventTitle" required>
+
+<label>Event Date</label>
+<input type="date" id="eventDate" required>
+
+<label>Category</label>
+<select id="eventCategory" required>
+<option value="">Select Category</option>
+<option>Conference</option>
+<option>Workshop</option>
+<option>Seminar</option>
+<option>Webinar</option>
+<option>Meetup</option>
+<option>Social</option>
+</select>
+
+<label>Description</label>
+<textarea id="eventDescription" required></textarea>
+
+<button type="submit">Add Event</button>
+</form>
+</div>
+
+<div class="card">
+<h2>My Events</h2>
+
+<button id="clearAll">Clear All</button>
+<button id="addSample">Add Sample</button>
+
+<div id="eventContainer"></div>
+</div>
+
+</div>
+
+<!-- Wider DOM Demo -->
+<div class="card" id="domDemo">
+<h2>DOM Manipulation Demo</h2>
+<p style="font-size:15px;">Press any key on your keyboard </p>
+<h3 id="keyOutput">You pressed: </h3>
+</div>
+
+<script>
+
+let form = document.getElementById("eventForm");
+let eventContainer = document.getElementById("eventContainer");
+let clearAll = document.getElementById("clearAll");
+let addSample = document.getElementById("addSample");
+
+let events = JSON.parse(localStorage.getItem("events")) || [];
+
+function save(){
+    localStorage.setItem("events", JSON.stringify(events));
+}
+
+function getBadgeColor(category){
+    switch(category){
+        case "Conference": return "#007bff";
+        case "Workshop": return "#17a2b8";
+        case "Seminar": return "#6f42c1";
+        case "Webinar": return "#fd7e14";
+        case "Meetup": return "#20c997";
+        case "Social": return "#e83e8c";
+        default: return "#999";
+    }
+}
+
+function render(){
+    eventContainer.innerHTML="";
+
+    if(events.length===0){
+        eventContainer.innerHTML='<p>No Events Yet</p>';
+        return;
+    }
+
+    events.forEach((e,index)=>{
+        let div=document.createElement("div");
+        div.className="eventCard";
+
+        div.innerHTML=`
+            <button class="deleteBtn">X</button>
+            <h3>${e.title}</h3>
+            <p><strong>Date:</strong> ${e.date}</p>
+            <span class="badge" style="background:${getBadgeColor(e.category)}">
+                ${e.category}
+            </span>
+            <p>${e.desc}</p>
+        `;
+
+        div.querySelector(".deleteBtn").addEventListener("click",()=>{
+            events.splice(index,1);
+            save();
+            render();
+        });
+
+        eventContainer.appendChild(div);
+    });
+}
+
+form.addEventListener("submit",(e)=>{
+    e.preventDefault();
+
+    let newEvent={
+        title:eventTitle.value,
+        date:eventDate.value,
+        category:eventCategory.value,
+        desc:eventDescription.value
+    };
+
+    events.push(newEvent);
+    save();
+    render();
+    form.reset();
+});
+
+clearAll.addEventListener("click",()=>{
+    events=[];
+    save();
+    render();
+});
+
+addSample.addEventListener("click",()=>{
+    events=[
+        {title:"Web Development Conference",date:"2026-04-24",category:"Conference",desc:"Big tech event"},
+        {title:"JavaScript Workshop",date:"2026-05-09",category:"Workshop",desc:"Learn JS deeply"}
+    ];
+    save();
+    render();
+});
+
+render();
+
+let keyOutput = document.getElementById("keyOutput");
+
+document.addEventListener("keydown", function(event){
+    keyOutput.textContent = "You pressed: " + event.key;
+});
+
+</script>
+
+</body>
+</html>
